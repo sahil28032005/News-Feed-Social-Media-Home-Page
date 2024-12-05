@@ -15,6 +15,6 @@ router.get('/posts', getPosts);
 router.post('/:postId/like', likePost);
 
 // Route to comment on a post
-router.post('/:postId/comments', commentPost);
+router.post('/:postId/comment', commentPost);
 
 module.exports = router;

@@ -26,6 +26,13 @@ const createPost = async (req, res) => {
         });
 
         //handle cashing if necessary
+
+        //success response
+        res.status(200).send({
+            success: true,
+            message: 'Post created successfully',
+            data: post
+        });
     }
     catch (e) {
         return res.status(401).send({
@@ -51,8 +58,8 @@ const getPosts = async (req, res) => {
             skip,
             include: {
                 user: true,
-                comments: true,
-                likes: true
+                Comment: true,
+                Like: true
             },
         });
 
@@ -80,47 +87,61 @@ const likePost = async (req, res) => {
         const { userId } = req.body;
         const { postId } = req.params;
 
-        //check weather user has already liked the post
+        // Ensure postId and userId are integers
+        const parsedPostId = parseInt(postId);
+        const parsedUserId = parseInt(userId);
 
-        const existingLike = await prisma.like.findUnique({
-            where: {
-                userId_postId: { userId: parseInt(userId), postId: parseInt(postId) }
-            }
-        });
-
-        //if already liked return ststus as already liked
-        if (existingLike) {
+        // Validate if the ids are valid integers
+        if (isNaN(parsedPostId) || isNaN(parsedUserId)) {
             return res.status(400).send({
-                messsage: 'already liked'
+                message: 'Invalid postId or userId'
             });
         }
 
-        //otherwise mark the post as like by that user
-
-        const like = await prisma.like.create({
-            data: {
-                userId: parseInt(userId),
-                postId: parseInt(postId),
+        // Check if the user has already liked the post
+        const existingLike = await prisma.like.findUnique({
+            where: {
+                // Use the correct composite key name 'postId_userId'
+                postId_userId: {
+                    postId: parsedPostId,
+                    userId: parsedUserId
+                }
             }
         });
 
-        //mark it as liked
+        // If already liked, return a status indicating it's already liked
+        if (existingLike) {
+            return res.status(400).send({
+                message: 'Already liked this post'
+            });
+        }
 
+        // Otherwise, create a new like
+        const like = await prisma.like.create({
+            data: {
+                userId: parsedUserId,
+                postId: parsedPostId,
+            }
+        });
+
+        // Respond with success message and like data
         return res.status(200).send({
             success: true,
-            message: 'liked post successfully',
+            message: 'Liked post successfully',
             data: like
         });
     }
     catch (e) {
-        return res.status(401).send({
+        console.error('Error in likePost:', e); // Log error for better debugging
+        return res.status(500).send({
             success: false,
-            message: 'problem from api cant connect',
+            message: 'Problem from API, can\'t connect',
             error: e.message
         });
     }
-
 }
+
+
 
 //controller for commmenting of the post
 const commentPost = async (req, res) => {
@@ -133,6 +154,7 @@ const commentPost = async (req, res) => {
             data: {
                 userId: parseInt(userId),
                 postId: parseInt(postId),
+                content: content
             }
         });
 
