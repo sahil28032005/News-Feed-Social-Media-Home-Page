@@ -20,7 +20,7 @@ const createPost = async (req, res) => {
             data: {
                 title,
                 content,
-                mediaUri,
+                mediaUrl: mediaUri,
                 userId: parseInt(userId)
             }
         });
@@ -123,7 +123,7 @@ const likePost = async (req, res) => {
 }
 
 //controller for commmenting of the post
-const commentPost = async () => {
+const commentPost = async (req, res) => {
     try {
 
         const { content, userId } = req.body;
@@ -153,6 +153,13 @@ const commentPost = async () => {
         });
     }
 }
+
+module.exports = {
+    createPost,
+    getPosts,
+    likePost,
+    commentPost,
+};
 
 
 
